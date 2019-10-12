@@ -1,18 +1,25 @@
+use std::collections::HashMap;
+use std::io::Cursor;
+
+use rustache::{HashBuilder, Render};
+use rusoto_core::{Region};
+use rusoto_ec2::{Vpc, Ec2, Ec2Client, DescribeVpcsRequest};
+
+
 pub struct VPC {
-    cidr_block: Option<String>,
-    instance_tenancy: Option<String>,
-    ipv_6_cidr_block_association: bool,
-    tags: HashMap<Option<String>, Option<String>>,
-    vpc_id: Option<String>
+    pub cidr_block: Option<String>,
+    pub instance_tenancy: Option<String>,
+    pub ipv_6_cidr_block_association: bool,
+    pub tags: HashMap<Option<String>, Option<String>>,
+    pub vpc_id: Option<String>
 }
 
 
 pub struct VPCExplorer {
-    vpcs: Vec<VPC>
+    pub vpcs: Vec<VPC>
 }
 
-
-pub impl VPCExplorer {
+impl VPCExplorer {
     pub fn new() -> VPCExplorer {
         VPCExplorer {
             vpcs: Vec::new()
@@ -29,7 +36,7 @@ pub impl VPCExplorer {
             }   
             None => ()
         }   
-        
+       
         let new_vpc = VPC {
             cidr_block: vpc.cidr_block,
             instance_tenancy: vpc.instance_tenancy,
@@ -73,25 +80,26 @@ pub impl VPCExplorer {
         let name = vpc.vpc_id.as_ref().unwrap().clone();
         let cidr_block = vpc.cidr_block.as_ref().unwrap().clone();
         let instance_tenancy = vpc.instance_tenancy.as_ref().unwrap().clone();
-        let tags = String::new();
+        let mut tags = String::new();
 
-        //for (key, value) in vpc.tags.clone() {
-        //    println!("{}: \"{}\"", key.unwrap(), value.unwrap());
-        //    tags.push_str(&key.as_ref().unwrap().clone());
-        //}
+        for (key, value) in &vpc.tags {
+            let tag_string = format!("{} = \"{}\"\n", key.clone().unwrap(), value.clone().unwrap());
+            tags.push_str(&tag_string);
+        }
 
         let data = HashBuilder::new().insert("name", name)
                                      .insert("cidr_block", cidr_block)
-                                     .insert("instance_tenancy", instance_tenancy);
+                                     .insert("instance_tenancy", instance_tenancy)
+                                     .insert("tags", tags);
 
         let mut out = Cursor::new(Vec::new());
         let template = "
 resource \"aws_vpc\" \"{{ name }}\" {
-    cidr_block = \"{{ cidr_block }}\"
-    instance_tenancy = \"{{ instance_tenancy }}\"
-    tags = {
-        Name = \"{{ name }}\"
-    }\n
+   cidr_block = \"{{ cidr_block }}\"
+   instance_tenancy = \"{{ instance_tenancy }}\"
+   tags = {
+       {{{ tags }}}
+   }
 }\n\n";
 
         let result = data.render(template, &mut out).unwrap();
@@ -100,4 +108,3 @@ resource \"aws_vpc\" \"{{ name }}\" {
     }
 
 }
-

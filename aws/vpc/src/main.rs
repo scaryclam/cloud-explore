@@ -1,11 +1,10 @@
+extern crate rustache;
 extern crate rusoto_core;
 extern crate rusoto_ec2;
-extern crate rustache;
-extern crate vpc;
 
-use rustache::{HashBuilder, Render};
+mod explorer;
 
-use vpc::vpc::{VPCExplorer};
+use explorer::VPCExplorer;
 
 
 pub struct ResourceExplorer {
@@ -29,7 +28,7 @@ impl ResourceExplorer {
 
 fn main() {
     println!("Started");
-    let mut explorer = ResourceExplorer::new();
-    explorer.explore();
+    let mut foo = ResourceExplorer::new();
+    foo.explore();
 }
 
