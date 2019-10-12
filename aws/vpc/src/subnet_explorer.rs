@@ -9,6 +9,7 @@ use rusoto_ec2::{Subnet, Ec2, Ec2Client, DescribeSubnetsRequest};
 pub struct Ec2Subnet {
     pub tags: HashMap<Option<String>, Option<String>>,
     pub subnet_id: Option<String>,
+    pub vpc_id: Option<String>,
     pub cidr_block: Option<String>
 }
 
@@ -16,6 +17,7 @@ pub struct Ec2Subnet {
 pub struct SubnetExplorer {
     pub subnets: Vec<Ec2Subnet>
 }
+
 
 impl SubnetExplorer {
     pub fn new() -> SubnetExplorer {
@@ -37,6 +39,7 @@ impl SubnetExplorer {
        
         let new_subnet = Ec2Subnet {
             tags: tags,
+            vpc_id: subnet.vpc_id,
             subnet_id: subnet.subnet_id,
             cidr_block: subnet.cidr_block
         };  
@@ -74,6 +77,7 @@ impl SubnetExplorer {
 
     pub fn terraform_the_things(&self, subnet: &Ec2Subnet) {
         let name = subnet.subnet_id.as_ref().unwrap().clone();
+        let vpc_id = subnet.vpc_id.as_ref().unwrap().clone();
         let cidr_block = subnet.cidr_block.as_ref().unwrap().clone();
         let mut tags = String::new();
 
@@ -83,12 +87,14 @@ impl SubnetExplorer {
         }
 
         let data = HashBuilder::new().insert("name", name)
+                                     .insert("vpc_id", vpc_id)
                                      .insert("cidr_block", cidr_block)
                                      .insert("tags", tags);
 
         let mut out = Cursor::new(Vec::new());
         let template = "
 resource \"aws_subnet\" \"{{ name }}\" {
+   vpc_id = {{ vpc_id }}
    cidr_block = {{ cidr_block }}
    tags = {
        {{{ tags }}}
