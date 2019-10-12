@@ -10,7 +10,11 @@ pub struct Ec2Subnet {
     pub tags: HashMap<Option<String>, Option<String>>,
     pub subnet_id: Option<String>,
     pub vpc_id: Option<String>,
-    pub cidr_block: Option<String>
+    pub availability_zone: Option<String>,
+    pub availability_zone_id: Option<String>,
+    pub cidr_block: Option<String>,
+    pub map_public_ip_on_launch: Option<bool>,
+    pub map_public_addess_on_creation: Option<bool>
 }
 
 
@@ -41,7 +45,11 @@ impl SubnetExplorer {
             tags: tags,
             vpc_id: subnet.vpc_id,
             subnet_id: subnet.subnet_id,
-            cidr_block: subnet.cidr_block
+            availability_zone: subnet.availability_zone,
+            availability_zone_id: subnet.availability_zone_id,
+            cidr_block: subnet.cidr_block,
+            map_public_ip_on_launch: subnet.map_public_ip_on_launch,
+            map_public_addess_on_creation: subnet.assign_ipv_6_address_on_creation
         };  
         
         self.subnets.push(new_subnet);
@@ -79,6 +87,9 @@ impl SubnetExplorer {
         let name = subnet.subnet_id.as_ref().unwrap().clone();
         let vpc_id = subnet.vpc_id.as_ref().unwrap().clone();
         let cidr_block = subnet.cidr_block.as_ref().unwrap().clone();
+        let availability_zone = subnet.availability_zone.as_ref().unwrap().clone();
+        let map_public_ip_on_launch = subnet.map_public_ip_on_launch.as_ref().unwrap().clone();
+        let map_public_addess_on_creation = subnet.map_public_addess_on_creation.as_ref().unwrap().clone();
         let mut tags = String::new();
 
         for (key, value) in &subnet.tags {
@@ -89,16 +100,22 @@ impl SubnetExplorer {
         let data = HashBuilder::new().insert("name", name)
                                      .insert("vpc_id", vpc_id)
                                      .insert("cidr_block", cidr_block)
-                                     .insert("tags", tags);
+                                     .insert("availability_zone", availability_zone)
+                                     .insert("map_public_ip_on_launch", map_public_ip_on_launch)
+                                     .insert("map_public_addess_on_creation", map_public_addess_on_creation);
 
         let mut out = Cursor::new(Vec::new());
         let template = "
 resource \"aws_subnet\" \"{{ name }}\" {
-   vpc_id = {{ vpc_id }}
-   cidr_block = {{ cidr_block }}
-   tags = {
-       {{{ tags }}}
-   }
+    vpc_id = {{ vpc_id }}
+    cidr_block = {{ cidr_block }}
+    availability_zone = {{ availability_zone }}
+    map_public_ip_on_launch = {{ map_public_ip_on_launch }}
+    map_public_addess_on_creation = {{ map_public_addess_on_creation }}
+
+    tags = {
+        {{{ tags }}}
+    }
 }\n\n";
 
         let result = data.render(template, &mut out).unwrap();
