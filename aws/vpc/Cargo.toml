@@ -1,0 +1,10 @@
+[package]
+name = "vpc"
+version = "0.1.0"
+authors = ["Becky <github@scaryclam.co.uk>"]
+
+[dependencies]
+rusoto_core = "0.40.0"
+rusoto_credential = "0.40.0"
+rusoto_ec2 = "0.40.0"
+rustache = "0.1.0"
