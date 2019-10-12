@@ -6,4 +6,3 @@ mod tests {
     }
 }
 
-mod vpc;

@@ -2,27 +2,28 @@ extern crate rustache;
 extern crate rusoto_core;
 extern crate rusoto_ec2;
 
-//use vpc::VPCExplorer;
+mod explorer;
 
 use std::collections::HashMap;
 use std::io::Cursor;
 use rustache::{HashBuilder, Render};
 use rusoto_core::{Region};
 use rusoto_ec2::{Vpc, Ec2, Ec2Client, DescribeVpcsRequest};
+use explorer::{VPC, VPCExplorer};
 
 
-pub struct VPC {
-    cidr_block: Option<String>,
-    instance_tenancy: Option<String>,
-    ipv_6_cidr_block_association: bool,
-    tags: HashMap<Option<String>, Option<String>>,
-    vpc_id: Option<String>
-}
-
-
-pub struct VPCExplorer {
-    vpcs: Vec<VPC>
-}
+//pub struct VPC {
+//    cidr_block: Option<String>,
+//    instance_tenancy: Option<String>,
+//    ipv_6_cidr_block_association: bool,
+//    tags: HashMap<Option<String>, Option<String>>,
+//    vpc_id: Option<String>
+//}
+//
+//
+//pub struct VPCExplorer {
+//    vpcs: Vec<VPC>
+//}
 
 
 impl VPCExplorer {
@@ -127,16 +128,16 @@ impl ResourceExplorer {
         }
     }
 
-    //pub fn explore(&mut self) {
-    //    self.vpc_handler.explore();
-    //    self.vpc_handler.list_vpcs();
-    //}
+    pub fn explore(&mut self) {
+        self.vpc_handler.explore();
+        self.vpc_handler.list_vpcs();
+    }
 }
 
 
 fn main() {
     println!("Started");
-    let mut explorer = ResourceExplorer::new();
-    //explorer.explore();
+    let mut foo = ResourceExplorer::new();
+    foo.explore();
 }
 
