@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use std::io::Cursor;
+use std::io::{Cursor, Write};
+use std::fs::File;
 
 use rustache::{HashBuilder, Render};
 use rusoto_core::{Region};
@@ -77,13 +78,16 @@ impl SubnetExplorer {
         }
     }
 
-    pub fn list_subnets(&self) {
+    pub fn list_subnets(&self) -> std::io::Result<()> {
+        let mut output_file = File::create("subnet.tf")?;
         for subnet in self.subnets.iter() {
-            self.terraform_the_things(subnet);
+            let output = self.terraform_the_things(subnet);
+            output_file.write_all(output.as_bytes());
         }   
+        Ok(())
     }
 
-    pub fn terraform_the_things(&self, subnet: &Ec2Subnet) {
+    pub fn terraform_the_things(&self, subnet: &Ec2Subnet) -> std::string::String {
         let name = subnet.subnet_id.as_ref().unwrap().clone();
         let vpc_id = subnet.vpc_id.as_ref().unwrap().clone();
         let cidr_block = subnet.cidr_block.as_ref().unwrap().clone();
@@ -118,9 +122,9 @@ resource \"aws_subnet\" \"{{ name }}\" {
     }
 }\n\n";
 
-        let result = data.render(template, &mut out).unwrap();
-        println!("{}", String::from_utf8(out.into_inner()).unwrap());
-        result;
+        data.render(template, &mut out).unwrap();
+        let output = String::from_utf8(out.into_inner()).unwrap();
+        return output;
     }
 
 }
