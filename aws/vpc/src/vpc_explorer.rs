@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use std::io::Cursor;
+use std::io::{Cursor, Write};
+use std::fs::File;
 
 use rustache::{HashBuilder, Render};
 use rusoto_core::{Region};
@@ -70,13 +71,21 @@ impl VPCExplorer {
         }
     }
 
-    pub fn list_vpcs(&self) {
+    pub fn list_vpcs(&self) -> std::io::Result<()> {
+        let mut output_file = File::create("vpc.tf")?;
         for vpc in self.vpcs.iter() {
-            self.terraform_the_things(vpc);
-        }   
+            let output = self.terraform_the_things(vpc);
+            output_file.write_all(output.as_bytes());
+        }
+        Ok(())
     }
 
-    pub fn terraform_the_things(&self, vpc: &VPC) {
+    //fn write_file(&self, output_file: std::result::Result<File, std::io::Error>, output: String) -> std::io::Result<()> {
+    //        output_file.write_all(output);
+    //        Ok(())
+    //}
+
+    pub fn terraform_the_things(&self, vpc: &VPC) -> std::string::String {
         let name = vpc.vpc_id.as_ref().unwrap().clone();
         let cidr_block = vpc.cidr_block.as_ref().unwrap().clone();
         let instance_tenancy = vpc.instance_tenancy.as_ref().unwrap().clone();
@@ -102,9 +111,8 @@ resource \"aws_vpc\" \"{{ name }}\" {
    }
 }\n\n";
 
-        let result = data.render(template, &mut out).unwrap();
-        println!("{}", String::from_utf8(out.into_inner()).unwrap());
-        result;
+        data.render(template, &mut out).unwrap();
+        let output = String::from_utf8(out.into_inner()).unwrap();
+        return output;
     }
-
 }
